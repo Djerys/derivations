@@ -13,20 +13,23 @@ def get_rules(string_rules: str):
 class Rule(object):
     def __init__(self, left, right):
         self.left = left
-        self.right = '' if right == 'eps' else right
+        self._right = '' if right == 'eps' else right
 
     def __repr__(self):
-        right = 'ε' if not self.right else self.right
-        return f'{self.left} -> {right}'
+        return f'{self.left} -> {self.right}'
+
+    @property
+    def right(self):
+        return 'ε' if not self._right else self._right
 
     def can_apply_left(self, chain):
-        return self._can_apply(chain, self.apply_left)
+        return self._can_apply(self.apply_left, chain)
 
     def can_apply_right(self, chain):
-        return self._can_apply(chain, self.apply_right)
+        return self._can_apply(self.apply_right, chain)
 
     def can_apply(self, chain):
-        return self._can_apply(chain, self.apply)
+        return self._can_apply(self.apply_right, chain)
 
     def apply_left(self, chain):
         return self._apply(chain, 1, True)
@@ -45,12 +48,17 @@ class Rule(object):
                     f'first nonterminal is {symbol}'
                 )
             elif self.left == symbol:
-                return chain.replace(symbol, self.right)
+                return self._apply_rule(chain, direction)
 
         raise CanNotApplyError(f'Can not apply to {chain}: no such nonterminal')
 
+    def _apply_rule(self, chain, direction):
+        partition = str.partition if direction >= 0 else str.rpartition
+        left, _, right = partition(chain, self.left)
+        return left + self._right + right
+
     @staticmethod
-    def _can_apply(chain, apply_func):
+    def _can_apply(apply_func, chain):
         try:
             apply_func(chain)
         except CanNotApplyError:
