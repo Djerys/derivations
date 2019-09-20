@@ -29,16 +29,13 @@ class NonTerminalNode(Node):
         return True
 
     def add(self, children):
-        self._add(children, was_changed=False)
-
-    def _add(self, children, was_changed):
         if not self._children:
             self._children = children
             return True
 
         for child in self._children:
-            if not was_changed and child.is_nonterminal():
-                was_changed = child._add(children, was_changed)
+            if child.is_nonterminal():
+                was_changed = child.add(children)
                 if was_changed:
                     return True
 
